@@ -18,9 +18,9 @@ class VesselData:
     ):
         self.sas_status = sas_status
         self.rcs_status = rcs_status
-        self.pitch = round(pitch, 2)
-        self.heading = round(heading, 2)
-        self.roll = round(roll, 2)
+        self.pitch = round(pitch)
+        self.heading = round(heading)
+        self.roll = round(roll)
         self.throttle = round(throttle, 2) * 100
         self.thrust = thrust
         self.speed = round(speed, 1)

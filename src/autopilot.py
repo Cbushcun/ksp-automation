@@ -36,10 +36,32 @@ class KSPAutopilot:
         discarded_parts = self._vessel.control.activate_next_stage()
         part_count = len(discarded_parts)
         return part_count, discarded_parts
-        """
-        Toggles the currnet throttle on or off. If current throttle is anything but 0, it will be set to 0. Otherwise, it will be returned to its previous throttle value.
-        """
-        self._max_throttle = self._throttle  
+    
+    def toggle_sas(self):
+        pass
+    
+    def toggle_rcs(self):
+        pass
+    
+    def enable_autopilot(self):
+        self._vessel.auto_pilot.engage()
+        
+    def disable_autopilot(self):
+        self._vessel.auto_pilot.disengage()
+        self._vessel.auto_pilot.sas = self._sas
+
+    def set_pitch(self, target_pitch):
+        controller = self._vessel.auto_pilot
+        controller.target_pitch = target_pitch
+        
+    def set_heading(self, target_heading):
+        controller = self._vessel.auto_pilot
+        controller.target_heading = target_heading
+        
+    def set_roll(self, target_roll):
+        controller = self._vessel.auto_pilot
+        controller.target_roll = target_roll
+        
     
     # QoL
     def countdown(self, seconds, activate_stage=True, string="Launching in"):
@@ -52,7 +74,7 @@ class KSPAutopilot:
         if activate_stage:
             self.next_stage()
             
-    # Getter Methods
+    # Data Grabbing
     def get_vessel_data(self):
         """Returns a VesselData object containing the current vessel data"""
         reference_frame = self._vessel.surface_reference_frame
@@ -88,5 +110,3 @@ class KSPAutopilot:
             time_to_apoapsis = orbit.time_to_apoapsis,
             time_to_periapsis = orbit.time_to_periapsis
         )
-    
-    # Setters
