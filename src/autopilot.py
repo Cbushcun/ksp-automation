@@ -2,8 +2,7 @@ import krpc
 import time
 
 from src.util import clear_screen
-from src.data.orbit import OrbitData
-from src.data.vessel import VesselData
+from src.data import OrbitData, VesselData
 
 class KSPAutopilot:
     
@@ -17,8 +16,6 @@ class KSPAutopilot:
         self._conn = krpc.connect(name=name)
         # Converting useful KRPC interactions for readability
         self._vessel = self._conn.space_center.active_vessel # type: ignore
-        self._ref_frame = self._vessel.surface_reference_frame
-        self._flight_telemetry = self._vessel.flight(self._vessel.surface_reference_frame)
         
         # Initiating local object data
         self._name = name
@@ -58,10 +55,12 @@ class KSPAutopilot:
     # Getter Methods
     def get_vessel_data(self):
         """Returns a VesselData object containing the current vessel data"""
+        reference_frame = self._vessel.surface_reference_frame
+        orbital_reference_frame = self._vessel.orbit.body.reference_frame
         info = self._vessel.control
         control_info = self._vessel.control
-        flight_info = self._vessel.flight(self._ref_frame)
-        
+        flight_info = self._vessel.flight(reference_frame)
+        orbital_flight_info = self._vessel.flight(orbital_reference_frame)        
         return VesselData(
             sas_status = info.sas,
             rcs_status = info.rcs,
@@ -70,7 +69,7 @@ class KSPAutopilot:
             roll = flight_info.roll,
             throttle = info.throttle,
             thrust = self._vessel.thrust,
-            speed = flight_info.speed,
+            speed = orbital_flight_info.speed,
             velocity = flight_info.velocity,
             mean_altitude = flight_info.mean_altitude,
             surface_altitude = flight_info.surface_altitude,
