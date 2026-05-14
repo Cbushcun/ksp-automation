@@ -16,14 +16,17 @@ class KSPAutopilot:
         self._conn = krpc.connect(name=name)
         # Converting useful KRPC interactions for readability
         self._vessel = self._conn.space_center.active_vessel # type: ignore
+        self._ref_frame = self._vessel.reference_frame
         
-        # Initiating local object data
+        # Data Streams
+        self._flight_stream = self._conn.add_stream(self._vessel.flight, self._ref_frame)        
+        # Defaults
         self._name = name
         self._sas = sas
         self._rcs = rcs
         self._throttle = throttle
         
-        # Configuring KRPC controller defaults
+        # Configuring defaults
         self._vessel.control.throttle = self._throttle
         self._vessel.control.sas = self._sas
         self._vessel.control.rcs = self._rcs
@@ -80,23 +83,21 @@ class KSPAutopilot:
     # Data Retrieval
     def get_vessel_data(self):
         """Returns a VesselData object containing the current vessel data"""
-        reference_frame = self._vessel.surface_reference_frame
         orbital_reference_frame = self._vessel.orbit.body.reference_frame
         info = self._vessel.control
-        flight_info = self._vessel.flight(reference_frame)
-        orbital_flight_info = self._vessel.flight(orbital_reference_frame)        
+        flight_info = self._flight_stream()
+        orbital_flight_info = self._conn.add_stream(self._vessel.flight, orbital_reference_frame)    
         return VesselData(
             sas_status = info.sas,
             rcs_status = info.rcs,
-            pitch = flight_info.pitch,
-            heading = flight_info.heading,
-            roll = flight_info.roll,
+            pitch = flight_info.pitch, # type: ignore
+            heading = flight_info.heading, # type: ignore
+            roll = flight_info.roll, # type: ignore
             throttle = info.throttle,
-            thrust = self._vessel.thrust,
-            speed = orbital_flight_info.speed,
-            velocity = flight_info.velocity,
-            mean_altitude = flight_info.mean_altitude,
-            surface_altitude = flight_info.surface_altitude,
+            speed = orbital_flight_info().speed, # type: ignore
+            velocity = flight_info.velocity, # type: ignore
+            mean_altitude = flight_info.mean_altitude, # type: ignore
+            surface_altitude = flight_info.surface_altitude, # type: ignore
             solar_panel_status = info.solar_panels
         )
         

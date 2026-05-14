@@ -9,7 +9,6 @@ class VesselData:
         heading,
         roll,
         throttle,
-        thrust,
         speed,
         velocity,
         mean_altitude,
@@ -22,7 +21,6 @@ class VesselData:
         self.heading = round(heading)
         self.roll = round(roll)
         self.throttle = round(throttle, 2) * 100
-        self.thrust = thrust
         self.speed = round(speed, 1)
         self.velocity = velocity
         self.mean_altitude = round(mean_altitude)
@@ -33,7 +31,6 @@ class VesselData:
         return f"""======Current Vessel Data======
     Pitch/Heading/Roll: {self.pitch} / {self.heading} / {self.roll}
     Throtle: {color_str(str(self.throttle), "green" if self.throttle > 0 else "red")}%
-    Thrust: {self.thrust}
     Speed: {self.speed}m/s
     Velocity: {self.velocity}
     Altitude (Sea-Level): {self.mean_altitude}m
