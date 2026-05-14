@@ -27,7 +27,7 @@ class KSPAutopilot:
         self._vessel.control.throttle = self._throttle
         self._vessel.control.sas = self._sas
         self._vessel.control.rcs = self._rcs
-        
+    
     # Vessel Control
     def next_stage(self):
         """
@@ -37,30 +37,33 @@ class KSPAutopilot:
         part_count = len(discarded_parts)
         return part_count, discarded_parts
     
-    def toggle_sas(self):
-        pass
-    
-    def toggle_rcs(self):
-        pass
-    
     def enable_autopilot(self):
         self._vessel.auto_pilot.engage()
+        
+    def enable_sas(self):
+        self._sas = True
+        self._vessel.auto_pilot.sas = True
+        
+    def enable_rcs(self):
+        self._rcs = True
+        # self._vessel.auto_pilot.rcs
+        
+    def disable_sas(self):
+        self._sas = False
+        self._vessel.auto_pilot.sas = False
         
     def disable_autopilot(self):
         self._vessel.auto_pilot.disengage()
         self._vessel.auto_pilot.sas = self._sas
 
     def set_pitch(self, target_pitch):
-        controller = self._vessel.auto_pilot
-        controller.target_pitch = target_pitch
+        self._vessel.auto_pilot.target_pitch = target_pitch
         
     def set_heading(self, target_heading):
-        controller = self._vessel.auto_pilot
-        controller.target_heading = target_heading
-        
+        self._vessel.auto_pilot.target_heading = target_heading
+                
     def set_roll(self, target_roll):
-        controller = self._vessel.auto_pilot
-        controller.target_roll = target_roll
+        self._vessel.auto_pilot.target_roll = target_roll
         
     
     # QoL
@@ -74,13 +77,12 @@ class KSPAutopilot:
         if activate_stage:
             self.next_stage()
             
-    # Data Grabbing
+    # Data Retrieval
     def get_vessel_data(self):
         """Returns a VesselData object containing the current vessel data"""
         reference_frame = self._vessel.surface_reference_frame
         orbital_reference_frame = self._vessel.orbit.body.reference_frame
         info = self._vessel.control
-        control_info = self._vessel.control
         flight_info = self._vessel.flight(reference_frame)
         orbital_flight_info = self._vessel.flight(orbital_reference_frame)        
         return VesselData(
@@ -95,14 +97,14 @@ class KSPAutopilot:
             velocity = flight_info.velocity,
             mean_altitude = flight_info.mean_altitude,
             surface_altitude = flight_info.surface_altitude,
-            solar_panel_status = control_info.solar_panels
+            solar_panel_status = info.solar_panels
         )
-    
+        
     def get_orbit_data(self):
         """Returns an OrbitData object containing the current orbital data"""
         orbit = self._vessel.orbit
         return OrbitData(
-            body = orbit.body,
+            body = orbit.body.name,
             speed = orbit.speed,
             period = orbit.period,
             apoapsis = orbit.apoapsis,
