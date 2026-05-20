@@ -16,20 +16,21 @@ class KSPAutopilot:
         self._conn = krpc.connect(name=name)
         # Converting useful KRPC interactions for readability
         self._vessel = self._conn.space_center.active_vessel # type: ignore
-        self._ref_frame = self._vessel.reference_frame
-        
-        # Data Streams
-        self._flight_stream = self._conn.add_stream(self._vessel.flight, self._ref_frame)        
-        # Defaults
+        self._vessel_ref_frame = self._vessel.reference_frame
+              
+        # Object defaults
         self._name = name
         self._sas = sas
         self._rcs = rcs
         self._throttle = throttle
         
-        # Configuring defaults
+        # In-Game default sync
         self._vessel.control.throttle = self._throttle
         self._vessel.control.sas = self._sas
         self._vessel.control.rcs = self._rcs
+        
+        # Data streams
+        self._flight_data = self._conn.add_stream(self._vessel.flight, self._vessel_ref_frame)
     
     # Vessel Control
     def next_stage(self):
@@ -47,10 +48,6 @@ class KSPAutopilot:
         self._sas = True
         self._vessel.auto_pilot.sas = True
         
-    def enable_rcs(self):
-        self._rcs = True
-        # self._vessel.auto_pilot.rcs
-        
     def disable_sas(self):
         self._sas = False
         self._vessel.auto_pilot.sas = False
@@ -67,8 +64,25 @@ class KSPAutopilot:
                 
     def set_roll(self, target_roll):
         self._vessel.auto_pilot.target_roll = target_roll
+
+    # Data retrieval
+    def get_vessel_data(self):
+        flight_info = self._vessel.flight()
+        orbit_info = self._vessel.orbit
+        mean_alt = self._conn.add_stream(getattr, flight_info, "mean_altitude")
+        surf_alt = self._conn.add_stream(getattr, flight_info, "surface_altitude")
+        speed = self._conn.add_stream(getattr, flight_info, "speed")
+        orbital_body = self._conn.add_stream(getattr, orbit_info, "body")
+        orbital_speed = None
+        orbital_period = None
+        orbital_inclination = None
+        apoapsis = None
+        periapsis = None
+        time_to_apoapsos = None
+        time_to_periapsis = None
         
-    
+        return f"{orbital_body()}"
+
     # QoL
     def countdown(self, seconds, activate_stage=True, string="Launching in"):
         """
@@ -80,36 +94,3 @@ class KSPAutopilot:
         if activate_stage:
             self.next_stage()
             
-    # Data Retrieval
-    def get_vessel_data(self):
-        """Returns a VesselData object containing the current vessel data"""
-        orbital_reference_frame = self._vessel.orbit.body.reference_frame
-        info = self._vessel.control
-        flight_info = self._flight_stream()
-        orbital_flight_info = self._conn.add_stream(self._vessel.flight, orbital_reference_frame)    
-        return VesselData(
-            sas_status = info.sas,
-            rcs_status = info.rcs,
-            pitch = flight_info.pitch, # type: ignore
-            heading = flight_info.heading, # type: ignore
-            roll = flight_info.roll, # type: ignore
-            throttle = info.throttle,
-            speed = orbital_flight_info().speed, # type: ignore
-            velocity = flight_info.velocity, # type: ignore
-            mean_altitude = flight_info.mean_altitude, # type: ignore
-            surface_altitude = flight_info.surface_altitude, # type: ignore
-            solar_panel_status = info.solar_panels
-        )
-        
-    def get_orbit_data(self):
-        """Returns an OrbitData object containing the current orbital data"""
-        orbit = self._vessel.orbit
-        return OrbitData(
-            body = orbit.body.name,
-            speed = orbit.speed,
-            period = orbit.period,
-            apoapsis = orbit.apoapsis,
-            periapsis = orbit.periapsis,
-            time_to_apoapsis = orbit.time_to_apoapsis,
-            time_to_periapsis = orbit.time_to_periapsis
-        )
